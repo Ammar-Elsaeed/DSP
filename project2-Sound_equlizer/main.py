@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets , QtCore, QtGui
-from pyqtgraph import PlotWidget, plot
+from pyqtgraph import plot, PlotWidget
 import pyqtgraph as pg
 import sys  
 import os
@@ -11,7 +11,6 @@ from scipy import signal
 import numpy as np
 from PyQt5.QtWidgets import QMessageBox , QFileDialog
 from PyQt5.Qt import QFileInfo
-from PyQt5.QtPrintSupport import QPrinter
 from scipy.io import wavfile
 import sounddevice as sd
 import time
@@ -51,8 +50,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         ]
         ####### list for slider
         self.gain = 3 * [10 * [None]]
-        self.slider_list = [self.band1_slider, self.band2_slider, self.band3_slider, self.band4_slider, self.band5_slider, self.band6_slider, self.band7_slider,
-        self.band8_slider, self.band9_slider, self.band10_slider]
+        self.slider_list = [self.verticalSlider_1, self.verticalSlider_2, self.verticalSlider_3, self.verticalSlider_4, self.verticalSlider_5, self.verticalSlider_6, self.verticalSlider_7,
+        self.verticalSlider_8, self.verticalSlider_9, self.verticalSlider_10]
         for i in range(10):
             self.gain[0][i] = float(self.slider_list[i].value())/10
         ######plot configuration#####
@@ -68,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.widget_configuration(self.widget_2s, "Spectrogram 2")
         self.widget_configuration(self.widget_3s, "Spectrogram 3")
 
-        self.graphs = [
+        self.graphs_widgets = [
 
             self.widget_before1,
             self.widget_before2,
@@ -78,20 +77,19 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.widget_after3
 
         ]
-        self.spectros = [
+        self.spectros_widgets = [
 
             self.widget_1s,
             self.widget_2s,
             self.widget_3s
 
         ]
-        for i in self.spectros:
+        for i in self.spectros_widgets:
             i.hide()
         
         self.spectro_min = 3 * [0]
         self.spectro_max = 3 * [1]
 
-        # self.current_widget = self.graphs[0] #idicate the selected widget in groupBox
         self.current_tab_index = 0  ###indicate current widget index
 
         #####color palette for spectro gram
@@ -118,30 +116,30 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.current_color = 3 * [0]
         #####aflag to indicate which is shown signal graph(1) or spectrogram(0) 
         
-        self.shown = 3 * [0]
+        self.spectro_flag = 3 * [0]
         
         self.signals = 3 * [0] #list to store loaded signals
         self.file_name = 3 * [0]
         self.x = 3 * [0] ### x , y to recieve data for plotting
-        self.y = 3 * [0]
+        self.inputSig = 3 * [0]
         self.freq_sampling = 3 * [0]
         self.output_signal = 3 * [0]
 
         #start the programm with one signal viewed
 
         #########actions triggeration###########
-        self.band1_slider.valueChanged.connect(lambda: self.get_gain(0))
-        self.band2_slider.valueChanged.connect(lambda: self.get_gain(1))
-        self.band3_slider.valueChanged.connect(lambda: self.get_gain(2))
-        self.band4_slider.valueChanged.connect(lambda: self.get_gain(3))
-        self.band5_slider.valueChanged.connect(lambda: self.get_gain(4))
-        self.band6_slider.valueChanged.connect(lambda: self.get_gain(5))
-        self.band7_slider.valueChanged.connect(lambda: self.get_gain(6))
-        self.band8_slider.valueChanged.connect(lambda: self.get_gain(7))
-        self.band9_slider.valueChanged.connect(lambda: self.get_gain(8))
-        self.band10_slider.valueChanged.connect(lambda: self.get_gain(9))
-        self.minFreqSlider.valueChanged.connect(self.update_spectro)
-        self.maxFreqSlider.valueChanged.connect(self.update_spectro)
+        self.verticalSlider_1.valueChanged.connect(lambda: self.get_gain(0))
+        self.verticalSlider_2.valueChanged.connect(lambda: self.get_gain(1))
+        self.verticalSlider_3.valueChanged.connect(lambda: self.get_gain(2))
+        self.verticalSlider_4.valueChanged.connect(lambda: self.get_gain(3))
+        self.verticalSlider_5.valueChanged.connect(lambda: self.get_gain(4))
+        self.verticalSlider_6.valueChanged.connect(lambda: self.get_gain(5))
+        self.verticalSlider_7.valueChanged.connect(lambda: self.get_gain(6))
+        self.verticalSlider_8.valueChanged.connect(lambda: self.get_gain(7))
+        self.verticalSlider_9.valueChanged.connect(lambda: self.get_gain(8))
+        self.verticalSlider_10.valueChanged.connect(lambda: self.get_gain(9))
+        self.verticalSlider_11.valueChanged.connect(self.update_spectro)
+        self.verticalSlider_12.valueChanged.connect(self.update_spectro)
         self.tabWidget.currentChanged.connect(self.select)
         self.actionOpen.triggered.connect(self.openfile)
         self.actionSave_as_PDF.triggered.connect(self.export_pdf)
@@ -168,9 +166,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.actionScroll_up.triggered.connect(self.scroll_up)
         self.actionScroll_down.triggered.connect(self.scroll_down)
         self.pushButton.clicked.connect(self.play_sound)
-        self.actionNewTab.triggered.connect(self.newTabHandler)
         # self.actionSave.triggered.connect(self.save_audio)
-       
+        
     def select(self):
         self.current_tab_index = self.tabWidget.currentIndex( )
         if self.signals[self.current_tab_index] == 0 :
@@ -180,11 +177,11 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         for i in range(10):
             self.slider_list[i].setValue(self.gain[self.current_tab_index][i]*10)
 
-        self.minFreqSlider.setValue(self.spectro_min[self.current_tab_index]* 100)
-        self.maxFreqSlider.setValue(self.spectro_max[self.current_tab_index] * 100)
+        self.verticalSlider_11.setValue(self.spectro_min[self.current_tab_index]* 100)
+        self.verticalSlider_12.setValue(self.spectro_max[self.current_tab_index] * 100)
         
 
-       
+
     def get_gain(self , i):
         if self.signals[self.current_tab_index] != 0:
             self.gain[self.current_tab_index][i] =  float(self.slider_list[i].value())/10
@@ -200,8 +197,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.plot_output()
 
             self.plot_spectro(self.output_signal[self.current_tab_index] , self.color[self.current_color[self.current_tab_index]])
-            y_range = self.graphs[self.current_tab_index].getViewBox().state['viewRange'][1]
-            self.graphs[self.current_tab_index + 3].setYRange(y_range[0] * self.gain[self.current_tab_index][i] , y_range[1] * self.gain[self.current_tab_index][i],padding=0)
+            y_range = self.graphs_widgets[self.current_tab_index].getViewBox().state['viewRange'][1]
+            self.graphs_widgets[self.current_tab_index + 3].setYRange(y_range[0] * self.gain[self.current_tab_index][i] , y_range[1] * self.gain[self.current_tab_index][i],padding=0)
             
         
        
@@ -222,11 +219,11 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
                 audio_df = pd.DataFrame(self.data)
                 # print(audio_df.head())
                 self.freq_sampling[self.current_tab_index] = audio_df.iloc[0 , 0]
-                self.y[self.current_tab_index] = audio_df.iloc[1 , 0]
-                # print(self.freq_sampling , self.y[self.current_tab_index])
+                self.inputSig[self.current_tab_index] = audio_df.iloc[1 , 0]
+                # print(self.freq_sampling , self.inputSig[self.current_tab_index])
             else:
                 df = pd.read_csv(self.file_path)
-                self.y[self.current_tab_index] = df.iloc[:,0]
+                self.inputSig[self.current_tab_index] = df.iloc[:,0]
                 self.freq_sampling[self.current_tab_index] = 1000
 
             self.signals[self.current_tab_index] = self.file_path
@@ -245,7 +242,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def update_sliders(self):
         if os.path.isfile('sliders.csv'):
             self.df = pd.read_csv('sliders.csv', index_col=0)
-            
+            # print(df)
+            # print(self.file_name)
             # print(df.isin([self.file_name]).any().any())
             if self.df.isin([self.file_name[self.current_tab_index]]).any().any() :
                 self.gain[self.current_tab_index] = self.df[self.df['name'] == self.file_name[self.current_tab_index]].values.tolist()[0][1:]
@@ -266,14 +264,14 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
 
     def plot_input(self):
-        self.limits(self.y[self.current_tab_index] , self.current_tab_index)
-        self.graphs[self.current_tab_index].plot(self.y[self.current_tab_index],name = self.file_name[self.current_tab_index] ,pen=self.pen)
+        self.limits(self.inputSig[self.current_tab_index] , self.current_tab_index)
+        self.graphs_widgets[self.current_tab_index].plot(self.inputSig[self.current_tab_index],name = self.file_name[self.current_tab_index] ,pen=self.pen)
 
     def plot_output(self):
         # print(self.gain[self.current_tab_index] )
-        self.output_signal[self.current_tab_index], z = fourier(self.y[self.current_tab_index] , self.gain[self.current_tab_index])
-        self.graphs[self.current_tab_index + 3].clear()
-        self.graphs[self.current_tab_index + 3].plot(self.output_signal[self.current_tab_index] ,name = self.file_name[self.current_tab_index] ,pen=self.pen)
+        self.output_signal[self.current_tab_index], z = fourier(self.inputSig[self.current_tab_index] , self.gain[self.current_tab_index])
+        self.graphs_widgets[self.current_tab_index + 3].clear()
+        self.graphs_widgets[self.current_tab_index + 3].plot(self.output_signal[self.current_tab_index] ,name = self.file_name[self.current_tab_index] ,pen=self.pen)
         self.limits(self.output_signal[self.current_tab_index] ,self.current_tab_index + 3 )
         
 
@@ -328,8 +326,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.pushButton.setEnabled(True)
         for i in range(10):
             self.slider_list[i].setEnabled(True)
-        self.minFreqSlider.setEnabled(True)
-        self.maxFreqSlider.setEnabled(True)
+        self.verticalSlider_11.setEnabled(True)
+        self.verticalSlider_12.setEnabled(True)
 
             
 
@@ -338,21 +336,21 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         if self.signals[0] != 0:
             self.index[0] = self.index[0] + self.interval[self.current_tab_index]
-            self.graphs[0].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
-            self.graphs[3].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
+            self.graphs_widgets[0].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
+            self.graphs_widgets[3].setXRange(0 + self.index[0], 5000 + self.index[0], padding=0)
 
     def update_plot2(self):
 
         if self.signals[1] != 0:
             self.index[1] = self.index[1] + self.interval[self.current_tab_index]
-            self.graphs[1].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
-            self.graphs[4].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
+            self.graphs_widgets[1].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
+            self.graphs_widgets[4].setXRange(0 + self.index[1], 5000 + self.index[1], padding=0)
 
     def update_plot3(self):                    
         if self.signals[2] != 0:
             self.index[2] = self.index[2] + self.interval[self.current_tab_index]
-            self.graphs[2].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
-            self.graphs[5].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
+            self.graphs_widgets[2].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
+            self.graphs_widgets[5].setXRange(0 + self.index[2], 5000 + self.index[2], padding=0)
                     
     #######play function to start the movement####
     def play(self):
@@ -373,8 +371,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         if self.timer[self.current_tab_index] != 0 :
             self.timer[self.current_tab_index].stop()
             self.index[self.current_tab_index] = 0
-            self.graphs[self.current_tab_index].setXRange(0, 5000, padding=0)
-            self.graphs[self.current_tab_index + 3].setXRange(0, 5000, padding=0)
+            self.graphs_widgets[self.current_tab_index].setXRange(0, 5000, padding=0)
+            self.graphs_widgets[self.current_tab_index + 3].setXRange(0, 5000, padding=0)
     def faster(self):
         if self.interval[self.current_tab_index] < 45 :
             self.interval[self.current_tab_index] += 10
@@ -421,8 +419,8 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         self.pushButton.setEnabled(False)
         for i in range(10):
             self.slider_list[i].setEnabled(False)   
-        self.minFreqSlider.setEnabled(False)
-        self.maxFreqSlider.setEnabled(False)
+        self.verticalSlider_11.setEnabled(False)
+        self.verticalSlider_12.setEnabled(False)
         
 
 
@@ -430,27 +428,27 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
     def spectro(self):
         
         if self.signals[self.current_tab_index] != 0:
-            if self.shown[self.current_tab_index] ==0 :
-                self.spectros[self.current_tab_index].show()
-                self.shown[self.current_tab_index] = 1
+            if self.spectro_flag[self.current_tab_index] ==0 :
+                self.spectros_widgets[self.current_tab_index].show()
+                self.spectro_flag[self.current_tab_index] = 1
             else:
-                self.spectros[self.current_tab_index].hide()
-                self.shown[self.current_tab_index] = 0
+                self.spectros_widgets[self.current_tab_index].hide()
+                self.spectro_flag[self.current_tab_index] = 0
 
     def spectro_sliders(self):
-        self.minFreqSlider.setValue(0)
-        self.maxFreqSlider.setValue(100)
+        self.verticalSlider_11.setValue(0)
+        self.verticalSlider_12.setValue(100)
         self.spectro_min[self.current_tab_index]  = 0.0
         self.spectro_max[self.current_tab_index]  = 1.0
 
     def plot_spectro(self , output_signal ,color):
         fs = self.freq_sampling[self.current_tab_index] ####sampling frequency
         self.f,self.t,self.Sxx = signal.spectrogram(output_signal,fs)
-        self.spectros[self.current_tab_index].clear()
+        self.spectros_widgets[self.current_tab_index].clear()
         pg.setConfigOptions(imageAxisOrder='row-major')
 
         self.img= pg.ImageItem()
-        self.spectros[self.current_tab_index].addItem(self.img)
+        self.spectros_widgets[self.current_tab_index].addItem(self.img)
         # Add a histogram to control the gradient of the image
         self.hist = pg.HistogramLUTItem()
         # Link the histogram to the image
@@ -465,23 +463,23 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
 
         self.img.scale(self.t[-1]/np.size(self.Sxx, axis=1),  self.f[-1]/np.size(self.Sxx, axis=0))
 
-        self.spectros[self.current_tab_index].setXRange(0 , self.t[-1] , padding=0)
-        self.spectros[self.current_tab_index].setYRange(0 ,  self.f[-1] , padding=0)
+        self.spectros_widgets[self.current_tab_index].setXRange(0 , self.t[-1] , padding=0)
+        self.spectros_widgets[self.current_tab_index].setYRange(0 ,  self.f[-1] , padding=0)
 
-        self.spectros[self.current_tab_index].setLimits(xMin=0, xMax=self.t[-1], yMin= 0 , yMax= self.f[-1])
+        self.spectros_widgets[self.current_tab_index].setLimits(xMin=0, xMax=self.t[-1], yMin= 0 , yMax= self.f[-1])
         # Add labels to the axis
-        self.spectros[self.current_tab_index].setLabel('bottom', "Time", units='s')
+        self.spectros_widgets[self.current_tab_index].setLabel('bottom', "Time", units='s')
             
-        self.spectros[self.current_tab_index].setLabel('left', "Frequency", units='Hz')
+        self.spectros_widgets[self.current_tab_index].setLabel('left', "Frequency", units='Hz')
 
     def update_spectro(self):
-        self.spectro_min[self.current_tab_index] = float(self.minFreqSlider.value())/100
-        self.spectro_max[self.current_tab_index] = float(self.maxFreqSlider.value())/100
-        self.minFreqSlider.setMaximum(self.maxFreqSlider.value()) ## the maximum slider cant be higher than the min slider
-        self.maxFreqSlider.setMinimum(self.minFreqSlider.value())
+        self.spectro_min[self.current_tab_index] = float(self.verticalSlider_11.value())/100
+        self.spectro_max[self.current_tab_index] = float(self.verticalSlider_12.value())/100
+        self.verticalSlider_11.setMaximum(self.verticalSlider_12.value()) ## the maximum slider cant be higher than the min slider
+        self.verticalSlider_12.setMinimum(self.verticalSlider_11.value())
         spectro_values = spectro_range(self.output_signal[self.current_tab_index] , self.spectro_min[self.current_tab_index] , self.spectro_max[self.current_tab_index])
         self.plot_spectro(spectro_values , self.color[self.current_color[self.current_tab_index]])
-        self.spectros[self.current_tab_index].setYRange(self.f[-1] * self.spectro_min[self.current_tab_index] ,  self.f[-1] * self.spectro_max[self.current_tab_index] , padding=0)
+        self.spectros_widgets[self.current_tab_index].setYRange(self.f[-1] * self.spectro_min[self.current_tab_index] ,  self.f[-1] * self.spectro_max[self.current_tab_index] , padding=0)
     #####function for color palette
     def color_palette(self, i):
         self.plot_spectro(self.output_signal[self.current_tab_index] , self.color[i])
@@ -498,7 +496,7 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
         msg.setIcon(QMessageBox.Information)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.setInformativeText('Copyright (C) 2021 SBME cairo university')
-        x = msg.exec_()
+        
 
     ########function to show and hide the toolbar#####
     def toggle_tool(self, action):
@@ -517,62 +515,60 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
             self.statusbar.hide()
     ######functionts for zoomig in and out
     def zoom_in(self):
-        self.graphs[self.current_tab_index].plotItem.getViewBox().scaleBy((1 / 1.25, 1 / 1.25))
-        self.graphs[self.current_tab_index + 3].plotItem.getViewBox().scaleBy((1 / 1.25, 1 / 1.25))
+        self.graphs_widgets[self.current_tab_index].plotItem.getViewBox().scaleBy((1 / 1.25, 1 / 1.25))
+        self.graphs_widgets[self.current_tab_index + 3].plotItem.getViewBox().scaleBy((1 / 1.25, 1 / 1.25))
     def zoom_out(self):
-        self.graphs[self.current_tab_index].plotItem.getViewBox().scaleBy((1.25,1.25))
-        self.graphs[self.current_tab_index + 3].plotItem.getViewBox().scaleBy((1.25,1.25))
+        self.graphs_widgets[self.current_tab_index].plotItem.getViewBox().scaleBy((1.25,1.25))
+        self.graphs_widgets[self.current_tab_index + 3].plotItem.getViewBox().scaleBy((1.25,1.25))
 
     ######functionts for scrolling
     def scroll_right(self):
-        x_range = self.graphs[self.current_tab_index].getViewBox().state['viewRange'][0] # the visible range in x axis
+        x_range = self.graphs_widgets[self.current_tab_index].getViewBox().state['viewRange'][0] # the visible range in x axis
         rx = 0.1 * (x_range[1] - x_range[0])
-        self.graphs[self.current_tab_index].setXRange((x_range[0]+rx),(x_range[1]+rx) , padding=0)
-        self.graphs[self.current_tab_index + 3].setXRange((x_range[0]+rx),(x_range[1]+rx) , padding=0)
+        self.graphs_widgets[self.current_tab_index].setXRange((x_range[0]+rx),(x_range[1]+rx) , padding=0)
+        self.graphs_widgets[self.current_tab_index + 3].setXRange((x_range[0]+rx),(x_range[1]+rx) , padding=0)
 
     def scroll_left(self):
-        x_range = self.graphs[self.current_tab_index].getViewBox().state['viewRange'][0] # the visible range in x axis
+        x_range = self.graphs_widgets[self.current_tab_index].getViewBox().state['viewRange'][0] # the visible range in x axis
         rx = 0.1 * (x_range[1] - x_range[0])
-        self.graphs[self.current_tab_index].setXRange((x_range[0]-rx),(x_range[1]-rx) , padding=0)
-        self.graphs[self.current_tab_index + 3].setXRange((x_range[0]-rx),(x_range[1]-rx) , padding=0)
+        self.graphs_widgets[self.current_tab_index].setXRange((x_range[0]-rx),(x_range[1]-rx) , padding=0)
+        self.graphs_widgets[self.current_tab_index + 3].setXRange((x_range[0]-rx),(x_range[1]-rx) , padding=0)
 
     def scroll_up(self):
-        y_range = self.graphs[self.current_tab_index].getViewBox().state['viewRange'][1] # the visible range in y axis
+        y_range = self.graphs_widgets[self.current_tab_index].getViewBox().state['viewRange'][1] # the visible range in y axis
         ry = 0.1 * (y_range[1] - y_range[0])
-        self.graphs[self.current_tab_index].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
+        self.graphs_widgets[self.current_tab_index].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
 
-        y_range = self.graphs[self.current_tab_index + 3].getViewBox().state['viewRange'][1] # the visible range in y axis
+        y_range = self.graphs_widgets[self.current_tab_index + 3].getViewBox().state['viewRange'][1] # the visible range in y axis
         ry = 0.1 * (y_range[1] - y_range[0])
-        self.graphs[self.current_tab_index + 3].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
+        self.graphs_widgets[self.current_tab_index + 3].setYRange((y_range[0]+ry),(y_range[1]+ry) , padding=0)
     
     def scroll_down(self):
-        y_range = self.graphs[self.current_tab_index].getViewBox().state['viewRange'][1] # the visible range in x axis
+        y_range = self.graphs_widgets[self.current_tab_index].getViewBox().state['viewRange'][1] # the visible range in x axis
         ry = 0.1 * (y_range[1] - y_range[0])
-        self.graphs[self.current_tab_index].setYRange((y_range[0]-ry),(y_range[1]-ry) , padding=0)
+        self.graphs_widgets[self.current_tab_index].setYRange((y_range[0]-ry),(y_range[1]-ry) , padding=0)
 
-        y_range = self.graphs[self.current_tab_index + 3].getViewBox().state['viewRange'][1] # the visible range in x axis
+        y_range = self.graphs_widgets[self.current_tab_index + 3].getViewBox().state['viewRange'][1] # the visible range in x axis
         ry = 0.1 * (y_range[1] - y_range[0])
-        self.graphs[self.current_tab_index + 3].setYRange((y_range[0]-ry),(y_range[1]-ry) , padding=0)
+        self.graphs_widgets[self.current_tab_index + 3].setYRange((y_range[0]-ry),(y_range[1]-ry) , padding=0)
     ###function to adjust plot widget automatically 
 
     def reset_widget(self):
-        self.graphs[self.current_tab_index].clear()
-        self.graphs[self.current_tab_index].setLabel('bottom', "Time (ms)")
-        self.graphs[self.current_tab_index + 3].clear()
-        self.graphs[self.current_tab_index + 3].setLabel('bottom', "Time (ms)")
-        self.spectros[self.current_tab_index].clear()
-        self.spectros[self.current_tab_index].hide()
-        self.shown[self.current_tab_index] = 0
+        self.graphs_widgets[self.current_tab_index].clear()
+        self.graphs_widgets[self.current_tab_index].setLabel('bottom', "Time (ms)")
+        self.graphs_widgets[self.current_tab_index + 3].clear()
+        self.graphs_widgets[self.current_tab_index + 3].setLabel('bottom', "Time (ms)")
+        self.spectros_widgets[self.current_tab_index].clear()
+        self.spectros_widgets[self.current_tab_index].hide()
+        self.spectro_flag[self.current_tab_index] = 0
         
         
             
     #####function to adjust automatically y axis range after zooming , scrolling 
     def limits(self , data ,index):
 
-        # self.current_widget.setYRange(min(data),max(data) , padding=0)
-        # self.current_widget.setLimits()
-        self.graphs[index].setYRange(np.float(min(data)),np.float(max(data)) , padding=0)
-        self.graphs[index].setLimits(xMin=0, xMax=(len(data) - 1), yMin=np.float(min(data)), yMax=np.float(max(data)))
+        self.graphs_widgets[index].setYRange(np.float(min(data)),np.float(max(data)) , padding=0)
+        self.graphs_widgets[index].setLimits(xMin=0, xMax=(len(data) - 1), yMin=np.float(min(data)), yMax=np.float(max(data)))
         
 
     ########configuration of plot widgets#####    
@@ -591,38 +587,27 @@ class MainWindow(QtWidgets.QMainWindow , main_gui.Ui_MainWindow):
                 fn += '.pdf'
         
 
-            if self.graphs[self.current_tab_index].scene():
+            if self.graphs_widgets[self.current_tab_index].scene():
                 # export all items in all viewers as images
-                inputImg = pg.exporters.ImageExporter(self.graphs[self.current_tab_index].scene())
-                inputImg.export('input_signal.png')
+                inputSig_img = pg.exporters.ImageExporter(self.graphs_widgets[self.current_tab_index].scene())
+                inputSig_img.export('input_signal.png')
     
-                outputImg = pg.exporters.ImageExporter(self.graphs[self.current_tab_index + 3].scene())
-                outputImg.export('output_signal.png')
+                outputSig_img = pg.exporters.ImageExporter(self.graphs_widgets[self.current_tab_index + 3].scene())
+                outputSig_img.export('output_signal.png')
     
                 #show spectrogram before printing
-                self.spectros[self.current_tab_index].show()
-                SpectroImg = pg.exporters.ImageExporter(self.spectros[self.current_tab_index].scene())
-                SpectroImg.export('spectrogram.png')
+                self.spectros_widgets[self.current_tab_index].show()
+                spectrogram_img = pg.exporters.ImageExporter(self.spectros_widgets[self.current_tab_index].scene())
+                spectrogram_img.export('spectrogram.png')
                 
                 my_pdf = GeneratePDF(fn)
                 my_pdf.create_pdf()
                 my_pdf.save_pdf()
-                if self.shown[self.current_tab_index] == 0 :
-                    self.spectros[self.current_tab_index].hide()
-    
-   
-           
+                if self.spectro_flag[self.current_tab_index] == 0 :
+                    self.spectros_widgets[self.current_tab_index].hide()   
 
-    def newTabHandler(self) :
-        self.tabWidget = self.parentWidget()
-        #              QStackedLayout    QStackedWidget
-        # or
-        #self.tabWidget = self.window()
-        print(self.tabWidget)
-        self.count = self.tabWidget.count()
-        self.win = self.MainWindow()
-        self.tabWidget.addTab(self.win, "Tab-{}".format(self.count + 1))
         
+
 def main():
     app = QtWidgets.QApplication(sys.argv)
     main = MainWindow()
