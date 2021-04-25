@@ -469,7 +469,6 @@ class Ui_MainWindow(object):
         self.actionSlower.setText(_translate("MainWindow", "Slower"))
         self.actionSlower.setStatusTip(_translate("MainWindow", "Make the playback slower"))
         self.actionSlower.setShortcut(_translate("MainWindow", "Ctrl+-"))
-        self.actionSlower.setShortcut(_translate("MainWindow", "Ctrl+-"))
         self.actionColor_1.setShortcut(_translate("MainWindow", "Ctrl+1"))
         self.actionColor_2.setText(_translate("MainWindow", "Color 2"))
         self.actionColor_2.setShortcut(_translate("MainWindow", "Ctrl+2"))
