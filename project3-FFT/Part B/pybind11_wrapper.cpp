@@ -8,7 +8,7 @@
 
 PYBIND11_MODULE(fourier, m) {
     m.doc() = "pybind11 example plugin"; // Optional module docstring
-    m.def("fft", &fft, "A function that multiplies two numbers");
-    m.def("ft", &ft, "A function that multiplies two numbers");
+    m.def("fft", &fft, "A function that caclulates fourier transform");
+    m.def("ft", &ft, "A function that caclulates fast fourier transform");
 
 }
