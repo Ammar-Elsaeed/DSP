@@ -4,6 +4,7 @@ typedef complex<double> cd;
 
 //Cooley-Tukey FFT
 void fft_(vector<cd>& x) { // must provide 2^n input size to function properly.
+
 	// Check if it is splitted enough
     int N=x.size();
 	if (N <= 1) {
@@ -55,15 +56,17 @@ vector<cd> ft(vector<cd> input)
     }
     return output;
 }
-// Driver code
-int main()
-{
-    vector<cd> input{1,1,1,1,0,0,0,0};
-    vector<cd> outFFT =fft(input);
-    vector<cd> outFT = ft(input);
-	for (int i = 0; i <input.size(); i++)
-		cout << outFFT[i] <<" "<<outFT[i]<< endl;
+// // Driver code
+// int main()
+// {
+//     vector<cd> input{1,1,1,1,0,0,0,0};
+//     vector<cd> outFFT =fft(input);
+//     vector<cd> outFT = ft(input);
+// 	for (int i = 0; i <input.size(); i++)
+// 		cout << outFFT[i] <<" "<<outFT[i]<< endl;
 
-	return 0;
-}
+// 	return 0;
+// }
 
+// g++-10 -std=c++17 fft.cpp                     
+// g++-10 -O3 -Wall -shared -std=c++11 -undefined dynamic_lookup $(python3 -m pybind11 --includes) pybind11_wrapper.cpp -o fourier$(python3-config --extension-suffix)
