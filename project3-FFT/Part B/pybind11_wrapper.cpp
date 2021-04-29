@@ -9,4 +9,6 @@
 PYBIND11_MODULE(fourier, m) {
     m.doc() = "pybind11 example plugin"; // Optional module docstring
     m.def("fft", &fft, "A function that multiplies two numbers");
+    m.def("ft", &ft, "A function that multiplies two numbers");
+
 }
