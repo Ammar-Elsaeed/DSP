@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 typedef complex<double> cd;
+typedef long long ll;
 
 //Cooley-Tukey FFT
 void fft_(vector<cd>& x) { // must provide 2^n input size to function properly.
@@ -46,11 +47,13 @@ vector<cd> ft(vector<cd> input)
      cd theta= cd(0.0,-2.0 * M_PI * inv);
     cd w=exp(theta),W;
     vector<cd> output(N,0);
-    for(int k=0;k<N;k++)
+	ll y;
+    for(ll k=0;k<N;k++)
     {
-        for(int n=0;n<N;n++)
+        for(ll n=0;n<N;n++)
         {
-            W=pow(w,n*k);
+			y=n*k;
+            W=pow(w,y);
             output[k] += input[n] * W;
         }
     }
