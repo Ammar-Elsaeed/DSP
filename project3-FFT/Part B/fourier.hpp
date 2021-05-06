@@ -4,17 +4,6 @@
 using namespace std;
 typedef complex<double> cd;
 typedef long long ll;
-//================================================Check if the number is a power of 2
-// bool isPowerOf2(ll n) return (((n & (n - 1)) == 0) ? 1 : 0); // returns true if n is a power of 2.
-//================================================Zero Padding of the Input
-// void inputPadding(vector<cd> &input)
-// {
-// 	ll inputSize = input.size();
-// 	ll nextPowerOf2 = pow(2, ceil(log2(inputSize))); //Calculate The Smallest power of 2 greater than or equal to n
-// 	ll numberOfPaddingZeros = nextPowerOf2 - inputSize;
-// 	while (numberOfPaddingZeros--)
-// 		input.push_back(cd(0));
-// }
 //================================================Cooley-Tukey FFT
 void fft_(vector<cd> &x)
 { // must provide 2^n input size to function properly.
@@ -48,9 +37,6 @@ void fft_(vector<cd> &x)
 //================================================Calculate FFT
 vector<cd> fft(vector<cd> input)
 {
-	// ll originalInputSize = input.size();
-	// if (!isPowerOf2(originalInputSize))
-	// 	inputPadding(input);
 	fft_(input);
 	vector<cd> output = input;
 	return output;
