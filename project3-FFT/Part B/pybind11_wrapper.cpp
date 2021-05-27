@@ -7,6 +7,6 @@
 
 PYBIND11_MODULE(fourier, m)
 {
-    m.def("fft", &fft, "A function that caclulates fourier transform");
-    m.def("ft", &ft, "A function that caclulates fast fourier transform");
+    m.def("fft", &fft, "A function that calculates fast fourier transform");
+    m.def("ft", &ft, "A function that calculates Discrete fourier transform");
 }
