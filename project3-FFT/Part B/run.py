@@ -3,6 +3,18 @@ from numpy.random import randint
 import numpy as np
 import time
 import fourier
+
+def calcTimeAndOutput(numSignalLengths,fourierAlgo):
+    outputs,outputsTime=[],[]
+    for i in range(numSignalLengths):
+        time_start=time.time()
+        if(fourierAlgo=='FFT'):
+            outputs.append(fourier.fft(inputs[i]))
+        elif(fourierAlgo=='FT'):
+            outputs.append(fourier.ft(inputs[i])) 
+        time_end=time.time()
+        outputsTime.append(time_end-time_start)
+    return outputs,outputsTime
 #===========================================Initialization
 size_10 = randint(0, 10, 16)
 size_100 = randint(0, 10, 128)
@@ -14,17 +26,9 @@ size_1M = randint(0, 10, 1048576) #2.7 H in FT
 inputs = [size_10,size_100,size_1k,size_10k,size_100k,size_1M]
 timeFFT,timeFT,outputsFFT,outputsFT = [],[],[],[]
 #===========================================FFT Time & Output Caclulations
-for i in range(6):
-    time_start=time.time()
-    outputsFFT.append(fourier.fft(inputs[i]))
-    time_end=time.time()
-    timeFFT.append(time_end-time_start)
+outputsFFT,timeFFT=calcTimeAndOutput(6,'FFT')
 #===========================================FT Time & Output Caclulations
-for i in range(4):
-    time_start=time.time()
-    outputsFT.append(fourier.ft(inputs[i]))
-    time_end=time.time()
-    timeFT.append(time_end-time_start)
+outputsFT,timeFT=calcTimeAndOutput(4,'FT')
 #===========================================Mean Square Error Calculations
 MSE=[]
 for i in range(4):

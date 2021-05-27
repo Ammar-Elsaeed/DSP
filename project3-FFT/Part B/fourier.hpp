@@ -42,14 +42,14 @@ vector<cd> ft(vector<cd> input)
 	int N = input.size();
 	double inv = 1.0 / N;
 	cd theta = cd(0.0, -2.0 * M_PI * inv);
-	cd w = exp(theta), W;
+	cd W = exp(theta), W_nk;
 	vector<cd> output(N, 0);
 	for (int k = 0; k < N; k++)
 	{
 		for (int n = 0; n < N; n++)
 		{
-			W = pow(w, n * k);
-			output[k] += input[n] * W;
+			W_nk = pow(W, n * k);
+			output[k] += input[n] * W_nk;
 		}
 	}
 	return output;
